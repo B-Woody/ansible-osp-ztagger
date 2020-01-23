@@ -1,0 +1,57 @@
+# The first 4 tasks are to extract a list of required container images using Openstack Platform Director. 
+# The first 4 tasks are skipped if gather_list is set to false.
+
+# The shell module runs a skopeo command instead of using the podman_container_facts or docker_container_facts Ansible modules.
+# This is because according ot the module man pages "If an image does not exist locally, it will not appear in the results."
+# We want to inspect then tag a bunch of remote container images before having to pull them so skopeo is used via shell module.
+
+---
+
+- name: Prepare an overcloud container image list 
+  shell: >
+    openstack overcloud container image prepare
+    --namespace={{ registry.container_registry }}/{{ registry.container_project }}
+    --set ceph_namespace={{  registry.container_registry }}/rhceph
+    --set ceph_image=rhceph-3-rhel7
+    --set ceph_tag=latest
+    --push-destination={{ provisioning_network }}:8787
+    --prefix=openstack- 
+  environment: "{{ registry_auth_env_v3 }}"
+  become: yes
+  become_user: stack
+  register: container_list_yaml
+  when: gather_list
+
+- name: Decode the container list
+  set_fact:
+    container_list: "{{ container_list_yaml.stdout | from_yaml }}"
+  when: gather_list
+    
+- name: Inspect current container tags in {{ registry.container_registry }} to create list
+  shell: >
+      skopeo inspect docker://{{ item.imagename }} | jq -r '.[ "RepoTags" ] | .[]' | sort -n -k1.6
+  args:
+     executable: /bin/bash 
+  loop: "{{ container_list.container_images }}"
+  register: registry_tags
+  when: gather_list
+
+- name: Create the total list of containers with all available version tags
+  set_fact: 
+    totaltaglist: "{{ totaltaglist|default() }}{% for i in item[1].stdout_lines %}{{ item[0].imagename | regex_replace(':latest$','') }}:{{i}}\n{% endfor %}"
+  with_together: 
+     - "{{ container_list.container_images }}"
+     - "{{ registry_tags.results }}"
+  when: gather_list
+
+- name: Use existing container list file 
+  set_fact:
+    totaltaglist: "{{ lookup('file', 'files/totaltaglist') }}"
+  when not: gather_list
+
+- name: Inspect each container image to gather facts
+  shell: "{% if item|length %}skopeo inspect docker://{{ item }}{% else %}:{% endif %}"
+  register: inspected
+  with_items: "{{ totaltaglist.split('\n') }}"
+  ignore_errors: True
+

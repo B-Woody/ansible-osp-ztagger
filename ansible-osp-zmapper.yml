@@ -1,0 +1,16 @@
+---
+
+
+##################################################
+#                                                #
+#   Tag Openstack container images by Z release  #
+#                                                #
+##################################################
+
+- name: Tag Openstack container images with Z release
+  hosts: localhost 
+  vars:
+    - gather_list: false
+  roles:
+    - role: container-z-release
+       

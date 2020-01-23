@@ -1,0 +1,13 @@
+---
+# Task to compile a list of container images required by OpenStack, skopeo inspect each
+# of those conatiner image versions then register the output.
+
+- include: container-inspect-facts.yml
+ 
+# Task uses information from registered output of a series of skopeo inspects ( in json )
+# to determine the OSP Z release that correseponds to each of the container images.
+# The task then uses skopeo to add a Z release tag to container images in the undercloud container registry. 
+
+- include: z-tag.yml
+
+    

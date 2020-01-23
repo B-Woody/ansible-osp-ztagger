@@ -1,0 +1,48 @@
+---
+# vars file for 600-test-role/
+
+- include: z-dates.yml
+
+# When true the role will runs tasks to use OSPD to generate a container list.
+# When false the provided totaltaglist in the files/ directroy will be used
+   
+gather_list: false
+
+registry:
+  container_registry: registry.access.redhat.com
+  container_project: rhosp13
+
+provisioning_network: 192.168.24.0/24
+
+# Undercloud environment variables used for running openstack commands on the undercloud using shell module
+# Not necessary if gather_list is set to false
+
+undercloud_admin_password: ChangeMe
+
+undercloud_auth_env_v2:
+  NOVA_VERSION: 1.1
+  OS_PASSWORD: "{{ undercloud_admin_password }}"
+  OS_AUTH_URL: "https://ospd-host.example.com:13000/v2.0"
+  OS_USERNAME: admin
+  OS_TENANT_NAME: admin
+  COMPUTE_API_VERSION: 1.1
+  OS_BAREMETAL_API_VERSION: 1.15
+  OS_NO_CACHE: True
+  OS_CLOUDNAME: undercloud
+  OS_IMAGE_API_VERSION: 1
+
+
+undercloud_auth_env_v3:
+  NOVA_VERSION: 1.1
+  OS_PASSWORD: "{{ undercloud_admin_password }}"
+  OS_AUTH_URL: "https://ospd-host.example.com:13000/v3"
+  OS_USERNAME: admin
+  OS_AUTH_TYPE: password
+  OS_PROJECT_NAME: admin
+  OS_USER_DOMAIN_NAME: Default
+  OS_PROJECT_DOMAIN_NAME: Default
+  COMPUTE_API_VERSION: 1.1
+  OS_BAREMETAL_API_VERSION: 1.34
+  OS_NO_CACHE: True
+  OS_CLOUDNAME: undercloud
+  OS_IDENTITY_API_VERSION: 3
