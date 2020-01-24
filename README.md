@@ -40,7 +40,9 @@ Vars will need to be modified in `roles/container-z-release/vars/main.yml` to su
 
 The `{{ gather_list }}` variable is set to false by default.
 
-Variables containing the dates of each Openstack Z release are kept in `roles/container-z-release/vars/z-dates.yml`
+The registry to inspect and destiation registry will need to be set in `roles/container-z-release/vars/main.yml`
+
+Variables containing the dates of each Openstack Z release are kept in the bottom section of `roles/container-z-release/vars/main.yml`
 
 Z Release Dates
 ---------------
@@ -60,3 +62,5 @@ Caveats and Known Issues
 - Doing some of the string, data and datetime manipulation stuff in Ansible got out of hand and the code looks quite ugly and hard to read. If anyone knows of ways to simplify it then a PR is welcomed and encouraged.
 
 - The mapping of Z release to container image tags is a guess based on my testing using the best available information and may not always be accurate.
+
+- Iterating through each item in the container image list to do a `skopeo inspect` can take a **LONG** time. If you're reaching out to an external registry it might be worth copying that variable to a local file for re-use in case somehting goes wrong and you need to start again. 

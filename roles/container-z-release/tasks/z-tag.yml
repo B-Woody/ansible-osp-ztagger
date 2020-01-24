@@ -10,10 +10,9 @@
 # This is because according ot the module man pages "If an image does not exist locally, it will not appear in the results."
 # We want to inspect then tag a bunch of remote container images before having to pull them so skopeo is used via shell module.
 
-
 - name: Tag Z Release Images
   vars:
-    ImageName: "{% if item.stdout|length %}{{ item.stdout | from_json | json_query('[ Name ]') }}{% endif %}"
+    ImageName: "{% if item.stdout|length %}{{ item.stdout | from_json | json_query('[ Labels.name ]') }}{% endif %}"
     ImageFullName: "{% if item.stdout|length %}{{ item._ansible_item_label }}{% endif %}"
     ImageCreated: "{% if item.stdout|length %}{{ item.stdout | from_json | json_query('[ Created ]') }}{% endif %}"
     ImageBatch: "{% if item.stdout|length %}{{ item.stdout | from_json | json_query('[ Labels.batch ]') }}{% endif %}"
@@ -25,8 +24,8 @@
     ZReleaseEpochMinus20Days: "{{ ((ZReleaseEpoch| int) - ( 86400 * 20 )) }}"
   shell: >
     skopeo copy 
-    docker://{{ undercloud.container_registry }}/{{ undercloud.container_project }}/{{ ImageFullName }}  
-    docker://{{ undercloud.container_registry }}/{{ undercloud.container_project }}/{{ ImageName }}:{{ z_release.label }}
+    docker://{{ ImageFullName }}  
+    docker://{{ registry.destination_registry }}/{{ ImageName[0] }}:{{ z_release.label }}
   with_items: "{{ inspected.results }}"
   when:  ImageCreatedEpoch >= ZReleaseEpochMinus20Days and ImageCreatedEpoch <= ZReleaseEpochPlus7Days
 

@@ -47,7 +47,7 @@
 - name: Use existing container list file 
   set_fact:
     totaltaglist: "{{ lookup('file', 'files/totaltaglist') }}"
-  when not: gather_list
+  when: not gather_list
 
 - name: Inspect each container image to gather facts
   shell: "{% if item|length %}skopeo inspect docker://{{ item }}{% else %}:{% endif %}"
