@@ -49,7 +49,7 @@ undercloud_auth_env_v3:
 
 # Openstack Platofrm Z Release Dates 
 
-z_release: "{{ Z4 }}"
+z_release: "{{ Z8 }}"
 
 GA:
   release: "2018-06-27"
