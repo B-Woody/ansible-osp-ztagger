@@ -15,7 +15,7 @@ registry:
 provisioning_network: 192.168.24.0/24
 
 # Undercloud environment variables used for running openstack commands on the undercloud using shell module
-# Not necessary if gather_list is set to false
+# Not necessary if {{ gather_list }} is set to false
 
 undercloud_admin_password: ChangeMe
 

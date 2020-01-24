@@ -1,6 +1,5 @@
 ---
 
-# There is a task for tagging regular Z releases and one for tagging async release.
 # The vars section creates variables for each image using the json data aquired from skopeo inspects in {{ inspected.results }}  
 # Jinja 'if' statements in the variable declarations are used to work around a blank entry causing the loop to fail.
 
@@ -23,27 +22,11 @@
     ImageCreatedEpoch: "{% if ImageCreatedDate|length %}{{ (ImageCreatedDate|to_datetime(format='%Y-%m-%d')).strftime('%s')|int }}{% endif %}"
     ZReleaseEpoch: "{{ (z_release.release|to_datetime(format='%Y-%m-%d')).strftime('%s')|int }}"
     ZReleaseEpochPlus7Days: "{{ ((ZReleaseEpoch | int) + ( 86400 * 7 )) }}"
-    ZReleaseEpochMinus7Days: "{{ ((ZReleaseEpoch| int) - ( 86400 * 20 )) }}"
-  shell: echo {{ ImageFullName }} >> {{ z_release.label }}-list.txt
+    ZReleaseEpochMinus20Days: "{{ ((ZReleaseEpoch| int) - ( 86400 * 20 )) }}"
+  shell: >
+    skopeo copy 
+    docker://{{ undercloud.container_registry }}/{{ undercloud.container_project }}/{{ ImageFullName }}  
+    docker://{{ undercloud.container_registry }}/{{ undercloud.container_project }}/{{ ImageName }}:{{ z_release.label }}
   with_items: "{{ inspected.results }}"
-  when:  ImageCreatedEpoch >= ZReleaseEpochMinus7Days and ImageCreatedEpoch <= ZReleaseEpochPlus7Days
+  when:  ImageCreatedEpoch >= ZReleaseEpochMinus20Days and ImageCreatedEpoch <= ZReleaseEpochPlus7Days
 
-# - name: Tag Z Release Async Images
-#   vars:
-#     ImageName: "{% if item.stdout|length %}{{ item.stdout | from_json | json_query('[ Name ]') }}{% endif %}"
-#     ImageFullName: "{% if item.stdout|length %}{{ item._ansible_item_label }}{% endif %}"
-#     ImageCreated: "{% if item.stdout|length %}{{ item.stdout | from_json | json_query('[ Created ]') }}{% endif %}"
-#     ImageBatch: "{% if item.stdout|length %}{{ item.stdout | from_json | json_query('[ Labels.batch ]') }}{% endif %}"
-#     ImageBuildDate: "{% if item.stdout|length %}{{ item.stdout | from_json | json_query('[ `Labels.build-date` ]') }}{% endif %}"
-#     ImageCreatedDate: "{% if ImageCreated|length %}{% for timestamp in ImageCreated %}{{ timestamp.split('T')[0]}}{% endfor %}{% endif %}"
-#     ImageCreatedEpoch: "{% if ImageCreatedDate|length %}{{ (ImageCreatedDate|to_datetime(format='%Y-%m-%d')).strftime('%s')|int }}{% endif %}"
-#     ZReleaseEpoch: "{{ (z_release.release|to_datetime(format='%Y-%m-%d')).strftime('%s')|int }}"
-#     ZReleaseEpochPlus7Days: "{{ ((ZReleaseEpoch | int) + ( 86400 * 7 )) }}"
-#     ZReleaseEpochMinus7Days: "{{ ((ZReleaseEpoch| int) - ( 86400 * 7 )) }}"
-#     NextZReleaseEpoch: "{{ (z_release.async|to_datetime(format='%Y-%m-%d')).strftime('%s')|int }}"
-#   debug:
-#     msg: |
-#       skopeo copy docker://{{ undercloud.container_registry }}/{{ undercloud.container_project }}/{{ ImageFullName }}
-#       docker://{{ undercloud.container_registry }}/{{ undercloud.container_project }}/{{ ImageName }}:{{ z_release.label }}.async
-#   with_items: "{{ inspected.results }}"
-#   when:  ImageCreatedEpoch > ZReleaseEpochPlus7Days and ImageCreatedEpoch < NextZReleaseEpoch
